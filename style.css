@@ -6,13 +6,12 @@ body {
     color: #fff; /* White text for contrast */
 }
 
-/* Logo container */
 .logo-container {
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 20px;
-    background-color: #111; /* Slightly lighter black for contrast */
+    background-color: #111; /* Slight contrast from black background */
 }
 
 .logo-container img {

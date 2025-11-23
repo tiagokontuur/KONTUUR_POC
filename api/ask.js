@@ -1,9 +1,13 @@
 // api/ask.js
 export default async function (context, req) {
-  const userInput = req.body?.input || "";
+  const body = await req.json();
+  const userInput = body?.input || "";
 
   if (!userInput) {
-    return { status: 400, body: { output: "Please enter a question." } };
+    return new Response(
+      JSON.stringify({ output: "Please enter a question." }),
+      { status: 400, headers: { "Content-Type": "application/json" } }
+    );
   }
 
   try {
@@ -26,10 +30,19 @@ export default async function (context, req) {
     );
 
     const data = await response.json();
-    const output = data.choices?.[0]?.message?.content || "No response from model.";
-    return { status: 200, body: { output } };
+    const output =
+      data.choices?.[0]?.message?.content || "No response from model.";
+
+    return new Response(
+      JSON.stringify({ output }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+
   } catch (err) {
     console.error(err);
-    return { status: 500, body: { output: "Server error" } };
+    return new Response(
+      JSON.stringify({ output: "Server error" }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
 }

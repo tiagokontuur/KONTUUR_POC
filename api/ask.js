@@ -29,8 +29,10 @@ export default async function (context, req) {
       }
     );
 
-    const data = await response.json();
-    const output =
+      const text = await response.text();
+      console.log("RAW RESPONSE:", text);
+      outputArea.innerText = text;   
+      const output =
       data.choices?.[0]?.message?.content || "No response from model.";
 
     return new Response(

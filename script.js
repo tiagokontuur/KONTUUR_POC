@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       // 🔥 REAL Azure API call (uncommented and active)
-      const response = await fetch('/api/', {
+      const response = await fetch('/api', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ input: userInput })

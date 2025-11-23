@@ -26,22 +26,21 @@ document.addEventListener('DOMContentLoaded', () => {
     outputArea.innerText = "Processing your request...";
 
     try {
-      // Simulated AI response
-      const simulatedResponse = `You asked: "${userInput}". AI response will appear here once API is connected.`;
-
-      // Display response
-      outputArea.innerText = simulatedResponse;
-
-      // Uncomment this when API is ready:
-      /*
+      // 🔥 REAL Azure API call (uncommented and active)
       const response = await fetch('/api/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ input: userInput })
       });
+
       const data = await response.json();
-      outputArea.innerText = data.output;
-      */
+
+      if (data && data.output) {
+        outputArea.innerText = data.output;
+      } else {
+        outputArea.innerText = "No valid response from server.";
+      }
+
     } catch (error) {
       outputArea.innerText = "Error processing your request.";
       console.error(error);

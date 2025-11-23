@@ -1,24 +1,49 @@
-import fetch from "node-fetch";   // ⬅ ADD THIS
+// api/ask/index.js  (CommonJS)
 
-export default async function (context, req) {
+module.exports = async function (context, req) {
   context.log("Ask API triggered");
 
-  const userInput = req.body?.input || "";
-  if (!userInput) {
-    return {
-      status: 400,
-      body: { output: "Please enter a question." }
-    };
-  }
-
   try {
-    const url = `${process.env.AZURE_OPENAI_ENDPOINT}openai/deployments/${process.env.AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=2024-05-01-preview`;
+    const userInput = req.body && req.body.input ? req.body.input : "";
 
-    const response = await fetch(url, {
+    if (!userInput) {
+      context.res = {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+        body: { output: "Please enter a question." }
+      };
+      return;
+    }
+
+    // Normalize endpoint (avoid missing slash)
+    const endpoint = (process.env.AZURE_OPENAI_ENDPOINT || "").replace(/\/+$/, "");
+    const deployment = process.env.AZURE_OPENAI_DEPLOYMENT;
+    const key = process.env.AZURE_OPENAI_KEY;
+
+    if (!endpoint || !deployment || !key) {
+      context.res = {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+        body: {
+          output: "Server misconfigured: missing Azure OpenAI env vars.",
+          debug: {
+            hasEndpoint: !!endpoint,
+            hasDeployment: !!deployment,
+            hasKey: !!key
+          }
+        }
+      };
+      return;
+    }
+
+    const url =
+      `${endpoint}/openai/deployments/${deployment}/chat/completions?api-version=2024-05-01-preview`;
+
+    const aoaiResp = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "api-key": process.env.AZURE_OPENAI_KEY
+        "api-key": key
       },
       body: JSON.stringify({
         messages: [
@@ -29,20 +54,25 @@ export default async function (context, req) {
       })
     });
 
-    const data = await response.json();
+    const data = await aoaiResp.json();
+    const output =
+      data?.choices?.[0]?.message?.content || "No response from model.";
 
-    return {
+    context.res = {
       status: 200,
+      headers: { "Content-Type": "application/json" },
+      body: { output }
+    };
+  } catch (err) {
+    context.log("❌ Ask function crash:", err);
+
+    context.res = {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
       body: {
-        output: data?.choices?.[0]?.message?.content || "No response."
+        output: "Server error",
+        error: err?.message || String(err)
       }
     };
-
-  } catch (err) {
-    context.error("🔥 ERROR inside ask.js:", err);
-    return {
-      status: 500,
-      body: { output: "Server error occurred." }
-    };
   }
-}
+};

@@ -1,18 +1,18 @@
+import fetch from "node-fetch";   // ⬅ ADD THIS
+
 export default async function (context, req) {
   context.log("Ask API triggered");
 
   const userInput = req.body?.input || "";
   if (!userInput) {
-    context.res = {
+    return {
       status: 400,
       body: { output: "Please enter a question." }
     };
-    return;
   }
 
   try {
-    const endpoint = process.env.AZURE_OPENAI_ENDPOINT.replace(/\/+$/, "");
-    const url = `${endpoint}/openai/deployments/${process.env.AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=2024-05-01-preview`;
+    const url = `${process.env.AZURE_OPENAI_ENDPOINT}openai/deployments/${process.env.AZURE_OPENAI_DEPLOYMENT}/chat/completions?api-version=2024-05-01-preview`;
 
     const response = await fetch(url, {
       method: "POST",
@@ -31,15 +31,18 @@ export default async function (context, req) {
 
     const data = await response.json();
 
-    context.res = {
+    return {
       status: 200,
-      body: { output: data.choices?.[0]?.message?.content || "No response." }
+      body: {
+        output: data?.choices?.[0]?.message?.content || "No response."
+      }
     };
+
   } catch (err) {
-    context.error(err);
-    context.res = {
+    context.error("🔥 ERROR inside ask.js:", err);
+    return {
       status: 500,
-      body: { output: "Server error" }
+      body: { output: "Server error occurred." }
     };
   }
 }

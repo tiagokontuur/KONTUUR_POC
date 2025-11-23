@@ -1,13 +1,9 @@
-// api/ask.js
 export default async function (context, req) {
-  const body = await req.json();
-  const userInput = body?.input || "";
+  context.log("Ask API triggered");
 
+  const userInput = req.body?.input || "";
   if (!userInput) {
-    return new Response(
-      JSON.stringify({ output: "Please enter a question." }),
-      { status: 400, headers: { "Content-Type": "application/json" } }
-    );
+    return { status: 400, body: { output: "Please enter a question." } };
   }
 
   try {
@@ -29,22 +25,15 @@ export default async function (context, req) {
       }
     );
 
-      const text = await response.text();
-      console.log("RAW RESPONSE:", text);
-      outputArea.innerText = text;   
-      const output =
-      data.choices?.[0]?.message?.content || "No response from model.";
+    const data = await response.json();
 
-    return new Response(
-      JSON.stringify({ output }),
-      { status: 200, headers: { "Content-Type": "application/json" } }
-    );
+    return {
+      status: 200,
+      body: { output: data.choices?.[0]?.message?.content || "No response." }
+    };
 
   } catch (err) {
-    console.error(err);
-    return new Response(
-      JSON.stringify({ output: "Server error" }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
-    );
+    context.error(err);
+    return { status: 500, body: { output: "Server error" } };
   }
 }
